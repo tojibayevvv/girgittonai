@@ -1,14 +1,87 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { RestaurantStatus } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   CreatePlanDto,
+  CreateRestaurantDto,
   UpdatePlanDto,
 } from './dto/super-admin.dto';
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40);
+}
 
 @Injectable()
 export class SuperAdminService {
   constructor(private prisma: PrismaService) {}
+
+  // ----- Yangi restoran + uning admini -----
+  async createRestaurant(dto: CreateRestaurantDto) {
+    const existing = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+    if (existing) {
+      throw new ConflictException('Bu email allaqachon ro‘yxatdan o‘tgan');
+    }
+
+    let slug = slugify(dto.restaurantName) || 'restoran';
+    const taken = await this.prisma.restaurant.findUnique({ where: { slug } });
+    if (taken) {
+      slug = `${slug}-${Math.random().toString(36).slice(2, 6)}`;
+    }
+
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+    const status = dto.status ?? 'ACTIVE';
+
+    const restaurant = await this.prisma.restaurant.create({
+      data: {
+        name: dto.restaurantName,
+        slug,
+        phone: dto.phone,
+        status,
+        users: {
+          create: {
+            email: dto.email,
+            passwordHash,
+            fullName: dto.fullName,
+            role: 'RESTAURANT_ADMIN',
+          },
+        },
+      },
+    });
+
+    // Tarif tanlangan bo'lsa o'shani, bo'lmasa eng arzon faol tarifni biriktiramiz
+    const plan = dto.planId
+      ? await this.prisma.plan.findUnique({ where: { id: dto.planId } })
+      : await this.prisma.plan.findFirst({
+          where: { isActive: true },
+          orderBy: { priceMonthly: 'asc' },
+        });
+    if (dto.planId && !plan) {
+      throw new NotFoundException('Tarif topilmadi');
+    }
+    if (plan) {
+      await this.prisma.subscription.create({
+        data: {
+          restaurantId: restaurant.id,
+          planId: plan.id,
+          status: status === 'ACTIVE' ? 'ACTIVE' : 'TRIALING',
+        },
+      });
+    }
+
+    return this.getRestaurant(restaurant.id);
+  }
 
   // ----- Umumiy statistika (dashboard) -----
   async stats() {

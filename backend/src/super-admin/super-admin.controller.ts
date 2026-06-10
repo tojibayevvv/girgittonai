@@ -10,6 +10,7 @@ import {
 import { SuperAdminService } from './super-admin.service';
 import {
   CreatePlanDto,
+  CreateRestaurantDto,
   UpdatePlanDto,
   UpdateRestaurantStatusDto,
 } from './dto/super-admin.dto';
@@ -31,6 +32,11 @@ export class SuperAdminController {
   @Get('restaurants')
   listRestaurants() {
     return this.service.listRestaurants();
+  }
+
+  @Post('restaurants')
+  createRestaurant(@Body() dto: CreateRestaurantDto) {
+    return this.service.createRestaurant(dto);
   }
 
   @Get('restaurants/:id')

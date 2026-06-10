@@ -1,6 +1,20 @@
 import { useEffect, useState } from 'react';
-import { Store, Pause, Play, UtensilsCrossed, QrCode, Receipt } from 'lucide-react';
-import { api, type RestaurantRow, type RestaurantStatus } from '../lib/api';
+import {
+  Store,
+  Pause,
+  Play,
+  UtensilsCrossed,
+  QrCode,
+  Receipt,
+  Plus,
+  X,
+} from 'lucide-react';
+import {
+  api,
+  type Plan,
+  type RestaurantRow,
+  type RestaurantStatus,
+} from '../lib/api';
 
 const STATUS_LABEL: Record<RestaurantStatus, string> = {
   TRIAL: 'Sinov',
@@ -18,9 +32,33 @@ const STATUS_DOT: Record<RestaurantStatus, string> = {
   SUSPENDED: 'bg-rose-500',
 };
 
+interface Form {
+  restaurantName: string;
+  fullName: string;
+  email: string;
+  password: string;
+  phone: string;
+  status: RestaurantStatus;
+  planId: string;
+}
+const emptyForm: Form = {
+  restaurantName: '',
+  fullName: '',
+  email: '',
+  password: '',
+  phone: '',
+  status: 'ACTIVE',
+  planId: '',
+};
+
 export default function RestaurantsPage() {
   const [rows, setRows] = useState<RestaurantRow[]>([]);
+  const [plans, setPlans] = useState<Plan[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState<Form>(emptyForm);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   async function load() {
     try {
@@ -31,6 +69,10 @@ export default function RestaurantsPage() {
   }
   useEffect(() => {
     load();
+    api
+      .get<Plan[]>('/super-admin/plans')
+      .then(setPlans)
+      .catch(() => {});
   }, []);
 
   async function setStatus(id: string, status: RestaurantStatus) {
@@ -38,15 +80,48 @@ export default function RestaurantsPage() {
     load();
   }
 
+  function openModal() {
+    setForm(emptyForm);
+    setFormError(null);
+    setOpen(true);
+  }
+
+  async function create(e: React.FormEvent) {
+    e.preventDefault();
+    setFormError(null);
+    setSaving(true);
+    try {
+      await api.post('/super-admin/restaurants', {
+        restaurantName: form.restaurantName,
+        fullName: form.fullName,
+        email: form.email,
+        password: form.password,
+        phone: form.phone || undefined,
+        status: form.status,
+        planId: form.planId || undefined,
+      });
+      setOpen(false);
+      load();
+    } catch (e: any) {
+      setFormError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <div>
-      <header className="mb-6">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Restoranlar
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Platformadagi barcha mijoz restoranlar va ularning holati.
-        </p>
+      <header className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Restoranlar</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Platformadagi barcha mijoz restoranlar va ularning holati.
+          </p>
+        </div>
+        <button onClick={openModal} className="btn btn-primary shrink-0">
+          <Plus size={16} />
+          Yangi restoran
+        </button>
       </header>
 
       {error && (
@@ -140,6 +215,145 @@ export default function RestaurantsPage() {
           </tbody>
         </table>
       </div>
+
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <form onSubmit={create} className="card w-full max-w-md p-6">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-slate-900">
+                Yangi restoran
+              </h2>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="mb-3">
+              <label className="label">Restoran nomi</label>
+              <input
+                placeholder="Masalan: Osh Markazi"
+                value={form.restaurantName}
+                onChange={(e) =>
+                  setForm({ ...form, restaurantName: e.target.value })
+                }
+                className="input"
+                required
+              />
+            </div>
+
+            <div className="mb-3">
+              <label className="label">Admin ismi</label>
+              <input
+                placeholder="Masalan: Akmal Karimov"
+                value={form.fullName}
+                onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                className="input"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="mb-3">
+                <label className="label">Admin email</label>
+                <input
+                  type="email"
+                  placeholder="admin@restoran.uz"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  className="input"
+                  required
+                />
+              </div>
+              <div className="mb-3">
+                <label className="label">Parol</label>
+                <input
+                  type="text"
+                  placeholder="kamida 6 belgi"
+                  value={form.password}
+                  onChange={(e) =>
+                    setForm({ ...form, password: e.target.value })
+                  }
+                  className="input"
+                  minLength={6}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="mb-3">
+              <label className="label">Telefon (ixtiyoriy)</label>
+              <input
+                placeholder="+998 90 123 45 67"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                className="input"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="mb-3">
+                <label className="label">Holati</label>
+                <select
+                  value={form.status}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      status: e.target.value as RestaurantStatus,
+                    })
+                  }
+                  className="input"
+                >
+                  <option value="ACTIVE">Faol</option>
+                  <option value="TRIAL">Sinov</option>
+                  <option value="SUSPENDED">To‘xtatilgan</option>
+                </select>
+              </div>
+              <div className="mb-3">
+                <label className="label">Tarif</label>
+                <select
+                  value={form.planId}
+                  onChange={(e) => setForm({ ...form, planId: e.target.value })}
+                  className="input"
+                >
+                  <option value="">Avtomatik (arzoni)</option>
+                  {plans.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {formError && (
+              <p className="mb-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-600">
+                {formError}
+              </p>
+            )}
+
+            <div className="mt-2 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="btn flex-1 bg-slate-100 text-slate-600 hover:bg-slate-200"
+              >
+                Bekor qilish
+              </button>
+              <button
+                disabled={saving}
+                className="btn btn-primary flex-1 disabled:opacity-60"
+              >
+                <Plus size={16} />
+                {saving ? 'Saqlanmoqda…' : 'Yaratish'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

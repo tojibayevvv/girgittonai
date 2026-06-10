@@ -1,14 +1,46 @@
 import {
   IsBoolean,
+  IsEmail,
   IsEnum,
   IsInt,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
+  MinLength,
   Min,
 } from 'class-validator';
 import { RestaurantStatus } from '@prisma/client';
+
+// Super admin tomonidan yangi restoran (+ uning admini) yaratish
+export class CreateRestaurantDto {
+  @IsString()
+  @IsNotEmpty()
+  restaurantName: string;
+
+  @IsString()
+  @IsNotEmpty()
+  fullName: string;
+
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @MinLength(6)
+  password: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsEnum(RestaurantStatus)
+  status?: RestaurantStatus;
+
+  @IsOptional()
+  @IsString()
+  planId?: string;
+}
 
 export class CreatePlanDto {
   @IsString()
