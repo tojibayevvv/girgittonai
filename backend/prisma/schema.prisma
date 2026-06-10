@@ -210,3 +210,12 @@ model OrderItem {
 
   @@index([orderId])
 }
+
+// Yuklangan rasmlar to'g'ridan-to'g'ri bazada saqlanadi (deploy'da yo'qolmasligi uchun).
+// Rasm yuklashda optimizatsiya/kichraytirish qilinadi, shuning uchun hajmi kichik bo'ladi.
+model UploadedImage {
+  id        String   @id @default(uuid())
+  mime      String
+  data      Bytes
+  createdAt DateTime @default(now())
+}
