@@ -11,7 +11,17 @@ import {
 } from 'lucide-react';
 import { api, type Table } from '../lib/api';
 
-const CLIENT_URL = import.meta.env.VITE_CLIENT_URL ?? 'http://localhost:5173';
+// Mijoz menyu sayti manzili.
+// 1) VITE_CLIENT_URL env bo'lsa — o'shani ishlatamiz.
+// 2) Bo'lmasa: local'da localhost, productionda esa qi2z domeni (fallback).
+const isLocalhost =
+  typeof window !== 'undefined' &&
+  /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
+const CLIENT_URL =
+  import.meta.env.VITE_CLIENT_URL ??
+  (isLocalhost
+    ? 'http://localhost:5173'
+    : 'https://girgittonai-qi2z.vercel.app');
 
 export default function TablesPage() {
   const [tables, setTables] = useState<Table[]>([]);
