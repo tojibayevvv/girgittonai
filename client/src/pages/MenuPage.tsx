@@ -19,6 +19,20 @@ import {
 
 type Cart = Record<string, number>;
 
+// Sayt https bo'lsa, http:// rasmlar brauzer tomonidan bloklanadi (mixed content).
+// Shu sababli http:// manzillarni https:// ga ko'taramiz.
+function safeImg(url?: string | null): string | undefined {
+  if (!url) return undefined;
+  if (
+    typeof window !== 'undefined' &&
+    window.location.protocol === 'https:' &&
+    url.startsWith('http://')
+  ) {
+    return 'https://' + url.slice('http://'.length);
+  }
+  return url;
+}
+
 export default function MenuPage() {
   const { tableCode = '' } = useParams();
   const [menu, setMenu] = useState<MenuResponse | null>(null);
@@ -140,7 +154,7 @@ export default function MenuPage() {
         <div className="flex items-center gap-3 px-4 py-3">
           {menu.restaurant.logoUrl ? (
             <img
-              src={menu.restaurant.logoUrl}
+              src={safeImg(menu.restaurant.logoUrl)}
               alt=""
               className="h-11 w-11 rounded-full object-cover"
             />
@@ -223,7 +237,7 @@ export default function MenuPage() {
                   >
                     {p.imageUrl ? (
                       <img
-                        src={p.imageUrl}
+                        src={safeImg(p.imageUrl)}
                         alt=""
                         className="h-24 w-24 shrink-0 rounded-lg object-cover"
                       />

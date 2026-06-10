@@ -48,7 +48,13 @@ export class UploadsController {
     @Req() req: Request,
   ): { url: string } {
     if (!file) throw new BadRequestException('Fayl topilmadi');
-    const base = `${req.protocol}://${req.get('host')}`;
+    // Railway/Vercel kabi proksi ortida req.protocol "http" qaytadi.
+    // Tashqi protokolni x-forwarded-proto sarlavhasidan olamiz (https bo'lishi uchun).
+    const forwarded = (req.headers['x-forwarded-proto'] as string | undefined)
+      ?.split(',')[0]
+      ?.trim();
+    const proto = forwarded || req.protocol;
+    const base = `${proto}://${req.get('host')}`;
     return { url: `${base}/uploads/${file.filename}` };
   }
 }
