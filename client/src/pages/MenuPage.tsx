@@ -223,13 +223,13 @@ export default function MenuPage() {
             <h2 className="mb-3 text-lg font-semibold tracking-tight text-slate-900">
               {cat.name}
             </h2>
-            <div className="grid gap-2.5 sm:grid-cols-2">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
               {cat.products.map((p) => {
                 const qty = cart[p.id] ?? 0;
                 return (
                   <article
                     key={p.id}
-                    className={`flex gap-3 rounded-xl border bg-white p-3 transition-colors ${
+                    className={`flex flex-col overflow-hidden rounded-xl border bg-white transition-colors ${
                       qty
                         ? 'border-brand-300 ring-1 ring-brand-200'
                         : 'border-slate-200'
@@ -239,43 +239,43 @@ export default function MenuPage() {
                       <img
                         src={safeImg(p.imageUrl)}
                         alt=""
-                        className="h-24 w-24 shrink-0 rounded-lg object-cover"
+                        className="aspect-square w-full object-cover"
                       />
                     ) : (
-                      <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-300">
-                        <UtensilsCrossed size={26} />
+                      <div className="flex aspect-square w-full items-center justify-center bg-slate-100 text-slate-300">
+                        <UtensilsCrossed size={32} />
                       </div>
                     )}
 
-                    <div className="flex min-w-0 flex-1 flex-col">
-                      <h3 className="font-medium leading-tight text-slate-900">
+                    <div className="flex min-w-0 flex-1 flex-col p-2.5">
+                      <h3 className="line-clamp-2 text-sm font-medium leading-tight text-slate-900">
                         {p.name}
                       </h3>
                       {p.description && (
-                        <p className="mt-1 line-clamp-2 text-[13px] leading-snug text-slate-500">
+                        <p className="mt-1 line-clamp-2 text-xs leading-snug text-slate-500">
                           {p.description}
                         </p>
                       )}
-                      <div className="mt-auto flex items-center justify-between pt-2">
-                        <span className="text-sm font-semibold tabular-nums text-slate-900">
+                      <div className="mt-auto flex items-center justify-between gap-1 pt-2">
+                        <span className="min-w-0 truncate text-[13px] font-semibold tabular-nums text-slate-900">
                           {fmt(Number(p.price))}
                         </span>
                         {qty ? (
-                          <div className="flex items-center gap-2.5">
+                          <div className="flex shrink-0 items-center gap-1.5">
                             <QtyBtn onClick={() => remove(p.id)}>
-                              <Minus size={15} />
+                              <Minus size={14} />
                             </QtyBtn>
                             <span className="w-4 text-center text-sm font-semibold tabular-nums">
                               {qty}
                             </span>
                             <QtyBtn primary onClick={() => add(p.id)}>
-                              <Plus size={15} />
+                              <Plus size={14} />
                             </QtyBtn>
                           </div>
                         ) : (
                           <button
                             onClick={() => add(p.id)}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 text-white transition-colors hover:bg-brand-700"
+                            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white transition-colors hover:bg-brand-700"
                             aria-label="Qo‘shish"
                           >
                             <Plus size={17} />
@@ -393,16 +393,15 @@ function MenuSkeleton() {
           <div className="h-2.5 w-16 animate-pulse rounded bg-slate-100" />
         </div>
       </div>
-      <div className="space-y-2.5 px-4 pt-6">
-        {Array.from({ length: 5 }).map((_, i) => (
+      <div className="grid grid-cols-2 gap-2.5 px-4 pt-6 sm:grid-cols-3 lg:grid-cols-4">
+        {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="flex gap-3 rounded-xl border border-slate-200 p-3"
+            className="overflow-hidden rounded-xl border border-slate-200"
           >
-            <div className="h-24 w-24 shrink-0 animate-pulse rounded-lg bg-slate-200" />
-            <div className="flex-1 space-y-2 py-1">
-              <div className="h-4 w-2/3 animate-pulse rounded bg-slate-200" />
-              <div className="h-3 w-full animate-pulse rounded bg-slate-100" />
+            <div className="aspect-square w-full animate-pulse bg-slate-200" />
+            <div className="space-y-2 p-2.5">
+              <div className="h-3.5 w-2/3 animate-pulse rounded bg-slate-200" />
               <div className="h-3 w-1/2 animate-pulse rounded bg-slate-100" />
             </div>
           </div>
