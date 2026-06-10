@@ -89,3 +89,34 @@ export class UpdateRestaurantStatusDto {
   @IsEnum(RestaurantStatus)
   status: RestaurantStatus;
 }
+
+// Restoran ma'lumotlarini tahrirlash
+export class UpdateRestaurantDto {
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @IsOptional()
+  @IsEnum(RestaurantStatus)
+  status?: RestaurantStatus;
+}
+
+// Restoran adminining parolini tiklash
+export class ResetPasswordDto {
+  @IsOptional()
+  @IsString()
+  userId?: string;
+
+  @IsString()
+  @MinLength(6)
+  password: string;
+}

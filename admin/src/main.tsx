@@ -8,6 +8,7 @@ import Layout from './components/Layout';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import RestaurantsPage from './pages/RestaurantsPage';
+import RestaurantDetailPage from './pages/RestaurantDetailPage';
 import PlansPage from './pages/PlansPage';
 import PaymentsPage from './pages/PaymentsPage';
 
@@ -27,6 +28,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/restaurants" element={<RestaurantsPage />} />
+            <Route
+              path="/restaurants/:id"
+              element={<RestaurantDetailPage />}
+            />
             <Route path="/plans" element={<PlansPage />} />
             <Route path="/payments" element={<PaymentsPage />} />
           </Route>

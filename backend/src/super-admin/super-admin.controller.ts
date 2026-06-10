@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -11,7 +12,9 @@ import { SuperAdminService } from './super-admin.service';
 import {
   CreatePlanDto,
   CreateRestaurantDto,
+  ResetPasswordDto,
   UpdatePlanDto,
+  UpdateRestaurantDto,
   UpdateRestaurantStatusDto,
 } from './dto/super-admin.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -50,6 +53,27 @@ export class SuperAdminController {
     @Body() dto: UpdateRestaurantStatusDto,
   ) {
     return this.service.setRestaurantStatus(id, dto.status);
+  }
+
+  @Patch('restaurants/:id')
+  updateRestaurant(
+    @Param('id') id: string,
+    @Body() dto: UpdateRestaurantDto,
+  ) {
+    return this.service.updateRestaurant(id, dto);
+  }
+
+  @Delete('restaurants/:id')
+  deleteRestaurant(@Param('id') id: string) {
+    return this.service.deleteRestaurant(id);
+  }
+
+  @Post('restaurants/:id/reset-password')
+  resetPassword(
+    @Param('id') id: string,
+    @Body() dto: ResetPasswordDto,
+  ) {
+    return this.service.resetPassword(id, dto);
   }
 
   @Get('plans')

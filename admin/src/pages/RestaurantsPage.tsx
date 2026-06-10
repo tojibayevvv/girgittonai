@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Store,
   Pause,
@@ -150,7 +151,12 @@ export default function RestaurantsPage() {
                       <Store size={17} />
                     </div>
                     <div>
-                      <div className="font-medium text-slate-900">{r.name}</div>
+                      <Link
+                        to={`/restaurants/${r.id}`}
+                        className="font-medium text-slate-900 hover:text-brand-600 hover:underline"
+                      >
+                        {r.name}
+                      </Link>
                       <div className="text-xs text-slate-400">/{r.slug}</div>
                     </div>
                   </div>

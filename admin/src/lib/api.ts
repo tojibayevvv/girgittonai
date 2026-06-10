@@ -37,6 +37,7 @@ export const api = {
     request<T>(p, { method: 'POST', body: JSON.stringify(body ?? {}) }),
   patch: <T>(p: string, body?: unknown) =>
     request<T>(p, { method: 'PATCH', body: JSON.stringify(body ?? {}) }),
+  del: <T>(p: string) => request<T>(p, { method: 'DELETE' }),
 };
 
 // ---------- Tiplar ----------
@@ -63,6 +64,30 @@ export interface RestaurantRow {
   slug: string;
   status: RestaurantStatus;
   createdAt: string;
+  subscription: {
+    status: string;
+    plan: { name: string; priceMonthly: string };
+  } | null;
+  _count: { products: number; tables: number; orders: number };
+}
+
+export interface RestaurantUser {
+  id: string;
+  email: string;
+  fullName: string;
+  role: string;
+}
+
+export interface RestaurantDetail {
+  id: string;
+  name: string;
+  slug: string;
+  phone: string | null;
+  address: string | null;
+  currency: string;
+  status: RestaurantStatus;
+  createdAt: string;
+  users: RestaurantUser[];
   subscription: {
     status: string;
     plan: { name: string; priceMonthly: string };

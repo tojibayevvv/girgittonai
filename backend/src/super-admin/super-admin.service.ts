@@ -9,7 +9,9 @@ import { PrismaService } from '../prisma/prisma.service';
 import {
   CreatePlanDto,
   CreateRestaurantDto,
+  ResetPasswordDto,
   UpdatePlanDto,
+  UpdateRestaurantDto,
 } from './dto/super-admin.dto';
 
 function slugify(value: string): string {
@@ -141,6 +143,52 @@ export class SuperAdminService {
       where: { id },
       data: { status },
     });
+  }
+
+  async updateRestaurant(id: string, dto: UpdateRestaurantDto) {
+    await this.getRestaurant(id);
+    await this.prisma.restaurant.update({
+      where: { id },
+      data: {
+        name: dto.name,
+        phone: dto.phone,
+        address: dto.address,
+        status: dto.status,
+      },
+    });
+    return this.getRestaurant(id);
+  }
+
+  async deleteRestaurant(id: string) {
+    await this.getRestaurant(id);
+    // Bog'liq yozuvlar (users, subscription, ...) onDelete: Cascade orqali o'chadi
+    await this.prisma.restaurant.delete({ where: { id } });
+    return { ok: true };
+  }
+
+  // Restoran adminining parolini tiklash
+  async resetPassword(restaurantId: string, dto: ResetPasswordDto) {
+    const restaurant = await this.getRestaurant(restaurantId);
+
+    let userId = dto.userId;
+    if (userId) {
+      const belongs = restaurant.users.some((u) => u.id === userId);
+      if (!belongs) throw new NotFoundException('Foydalanuvchi topilmadi');
+    } else {
+      // userId berilmagan bo'lsa — restoran adminini tanlaymiz
+      const admin =
+        restaurant.users.find((u) => u.role === 'RESTAURANT_ADMIN') ??
+        restaurant.users[0];
+      if (!admin) throw new NotFoundException('Foydalanuvchi topilmadi');
+      userId = admin.id;
+    }
+
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+    });
+    return { ok: true };
   }
 
   // ----- Tariflar (plans) -----
