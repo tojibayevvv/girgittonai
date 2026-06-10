@@ -3,4 +3,5 @@ dist
 .env
 *.log
 .DS_Store
-uploads
+# Faqat ildizdagi yuklangan rasmlar papkasi (src/uploads kodga tegmaydi)
+/uploads/
