@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build chiqishi
+dist/
+**/dist/
+build/
+
+# Muhit o'zgaruvchilari (sirlar!)
+.env
+**/.env
+!**/.env.example
+
+# Yuklangan fayllar (lokal disk)
+backend/uploads/
+
+# Loglar
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Prisma
+backend/prisma/*.db
