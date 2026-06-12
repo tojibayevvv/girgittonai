@@ -1,6 +1,6 @@
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api';
 
-const TOKEN_KEY = 'girgitton_admin_token';
+const TOKEN_KEY = 'token';
 
 export const tokenStore = {
   get: () => localStorage.getItem(TOKEN_KEY),
