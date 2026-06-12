@@ -53,3 +53,55 @@ export async function createOrder(payload: CreateOrderPayload) {
   }
   return res.json();
 }
+
+// ===== AI ovozli ofitsiant =====
+
+export interface AiChatMessage {
+  role: 'user' | 'assistant';
+  text: string;
+}
+
+export interface AiCartItem {
+  productId: string;
+  quantity: number;
+}
+
+export type AiAction =
+  | { type: 'add'; items: AiCartItem[] }
+  | { type: 'remove'; items: AiCartItem[] }
+  | { type: 'place' };
+
+export interface AiReply {
+  reply: string;
+  actions: AiAction[];
+}
+
+export async function sendAiMessage(
+  tableCode: string,
+  messages: AiChatMessage[],
+  cart: AiCartItem[],
+): Promise<AiReply> {
+  const res = await fetch(`${API_URL}/public/menu/${tableCode}/ai`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages, cart }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message ?? 'AI bilan bog‘lanib bo‘lmadi');
+  }
+  return res.json();
+}
+
+// Matnni o'zbek ovoziga aylantirish (Azure TTS). Audio blob URL qaytaradi.
+// Azure sozlanmagan bo'lsa null qaytaradi — brauzer ovoziga tushib qolamiz.
+export async function synthesizeSpeech(text: string): Promise<string | null> {
+  const res = await fetch(`${API_URL}/public/tts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) return null;
+  const blob = await res.blob();
+  return URL.createObjectURL(blob);
+}

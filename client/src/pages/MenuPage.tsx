@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
-  Sparkles,
   Plus,
   Minus,
   UtensilsCrossed,
@@ -16,6 +15,7 @@ import {
   type MenuResponse,
   type Product,
 } from '../lib/api';
+import VoiceAssistant from '../components/VoiceAssistant';
 
 type Cart = Record<string, number>;
 
@@ -41,7 +41,8 @@ export default function MenuPage() {
   const [cart, setCart] = useState<Cart>({});
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [placed, setPlaced] = useState<number | null>(null);
+  // Buyurtma berilganda qisqa bildirishnoma (alohida sahifa emas)
+  const [toast, setToast] = useState<string | null>(null);
   // 'ALL' yoki kategoriya id'si
   const [activeCat, setActiveCat] = useState('ALL');
 
@@ -75,34 +76,43 @@ export default function MenuPage() {
   const fmt = (n: number) =>
     new Intl.NumberFormat('uz-UZ').format(n) + ' ' + currency;
 
-  const add = (id: string) =>
-    setCart((c) => ({ ...c, [id]: (c[id] ?? 0) + 1 }));
-  const remove = (id: string) =>
+  // Savatchaning eng yangi holatini ref'da saqlaymiz — AI bir vaqtda
+  // qo'shib darrov buyurtma bersa, submit eskirgan state'ni o'qimasligi uchun
+  const cartRef = useRef(cart);
+  useEffect(() => {
+    cartRef.current = cart;
+  }, [cart]);
+
+  const addQty = (id: string, n = 1) =>
+    setCart((c) => ({ ...c, [id]: (c[id] ?? 0) + n }));
+  const removeQty = (id: string, n = 1) =>
     setCart((c) => {
       const next = { ...c };
       if (!next[id]) return next;
-      next[id] -= 1;
+      next[id] -= n;
       if (next[id] <= 0) delete next[id];
       return next;
     });
+  const add = (id: string) => addQty(id, 1);
+  const remove = (id: string) => removeQty(id, 1);
 
   async function submit() {
+    const items = Object.entries(cartRef.current)
+      .filter(([, quantity]) => quantity > 0)
+      .map(([productId, quantity]) => ({ productId, quantity }));
+    if (items.length === 0) return;
     setSubmitting(true);
     setError(null);
     try {
-      const items = Object.entries(cart).map(([productId, quantity]) => ({
-        productId,
-        quantity,
-      }));
       const order = await createOrder({
         tableCode,
         items,
         note: note || undefined,
       });
-      setPlaced(order.orderNumber);
       setCart({});
       setNote('');
-      window.scrollTo({ top: 0 });
+      setToast(`Buyurtma qabul qilindi · #${order.orderNumber}`);
+      setTimeout(() => setToast(null), 5000);
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -118,28 +128,6 @@ export default function MenuPage() {
       </Centered>
     );
   if (!menu) return null;
-
-  if (placed !== null) {
-    return (
-      <Centered>
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-50 text-brand-600">
-          <CheckCircle2 size={36} strokeWidth={2} />
-        </div>
-        <h1 className="mt-5 text-2xl font-semibold tracking-tight text-slate-900">
-          Buyurtma qabul qilindi
-        </h1>
-        <p className="mt-1.5 text-slate-500">
-          Buyurtma raqami:{' '}
-          <span className="font-semibold tabular-nums text-slate-900">
-            #{placed}
-          </span>
-        </p>
-        <button className="btn btn-primary mt-8" onClick={() => setPlaced(null)}>
-          Yana buyurtma berish
-        </button>
-      </Centered>
-    );
-  }
 
   // Faqat mahsuloti bor kategoriyalar
   const cats = menu.categories.filter((c) => c.products.length > 0);
@@ -196,14 +184,15 @@ export default function MenuPage() {
         )}
       </header>
 
-      {/* AI maslahatchi (keyinchalik) */}
-      <div className="mx-4 mt-4 flex items-start gap-2.5 rounded-xl border border-brand-100 bg-brand-50/60 px-3.5 py-3">
-        <Sparkles size={17} className="mt-0.5 shrink-0 text-brand-600" />
-        <p className="text-sm leading-snug text-brand-800">
-          <span className="font-medium">AI maslahatchi tez orada.</span> Tez
-          orada taom tanlashda yordam beradi.
-        </p>
-      </div>
+      {/* Buyurtma bildirishnomasi */}
+      {toast && (
+        <div className="pointer-events-none fixed inset-x-0 top-3 z-50 flex justify-center px-4">
+          <div className="animate-fade-in flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-card-hover">
+            <CheckCircle2 size={18} className="text-emerald-400" />
+            {toast}
+          </div>
+        </div>
+      )}
 
       {/* Menyu */}
       <main className="px-4 pb-40">
@@ -325,6 +314,15 @@ export default function MenuPage() {
           </div>
         </div>
       )}
+
+      {/* AI ovozli ofitsiant */}
+      <VoiceAssistant
+        tableCode={tableCode}
+        cart={cart}
+        onAdd={addQty}
+        onRemove={removeQty}
+        onPlace={submit}
+      />
     </div>
   );
 }
